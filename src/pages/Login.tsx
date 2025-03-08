@@ -8,7 +8,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithSteam } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
@@ -39,6 +39,18 @@ const Login = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSteamLogin = async () => {
+    try {
+      await loginWithSteam();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Steam login failed.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -90,6 +102,30 @@ const Login = () => {
               </button>
             </div>
           </form>
+          
+          <div className="mt-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border"></span>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <button
+                onClick={handleSteamLogin}
+                className="w-full flex items-center justify-center gap-2 py-2 bg-[#1b2838] text-white rounded-md hover:bg-[#1b2838]/90 font-medium"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20z" />
+                  <path d="M5.3 15.7a6.5 6.5 0 0 0 6.7 0M5.3 8.3a6.5 6.5 0 0 1 6.7 0M12 2v20M12 12h8.5a8.5 8.5 0 0 0-8.5-8.5V12z" />
+                </svg>
+                Steam
+              </button>
+            </div>
+          </div>
           
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
