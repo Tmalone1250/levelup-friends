@@ -1,4 +1,3 @@
-
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -8,7 +7,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, loginWithSteam } = useAuth();
+  const { login, loginWithDiscord } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
@@ -42,13 +41,13 @@ const Login = () => {
     }
   };
 
-  const handleSteamLogin = async () => {
+  const handleDiscordLogin = async () => {
     try {
-      await loginWithSteam();
+      await loginWithDiscord();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Steam login failed.",
+        description: error.message || "Discord login failed.",
         variant: "destructive"
       });
     }
@@ -115,14 +114,18 @@ const Login = () => {
             
             <div className="mt-4">
               <button
-                onClick={handleSteamLogin}
-                className="w-full flex items-center justify-center gap-2 py-2 bg-[#1b2838] text-white rounded-md hover:bg-[#1b2838]/90 font-medium"
+                onClick={handleDiscordLogin}
+                className="w-full flex items-center justify-center gap-2 py-2 bg-[#5865F2] text-white rounded-md hover:bg-[#5865F2]/90 font-medium"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20z" />
-                  <path d="M5.3 15.7a6.5 6.5 0 0 0 6.7 0M5.3 8.3a6.5 6.5 0 0 1 6.7 0M12 2v20M12 12h8.5a8.5 8.5 0 0 0-8.5-8.5V12z" />
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M8 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/>
+                  <path d="M14 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/>
+                  <path d="M8.5 17c0 1 1.5 3 3.5 3s3.5 -2 3.5 -3"/>
+                  <path d="M7 8c-1.286 1.72 -2 3.296 -2 5.09c0 .468 .051 .925 .147 1.365"/>
+                  <path d="M19 8c1.286 1.72 2 3.296 2 5.09c0 .468 -.051 .925 -.147 1.365"/>
                 </svg>
-                Steam
+                Discord
               </button>
             </div>
           </div>

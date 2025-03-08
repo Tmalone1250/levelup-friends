@@ -10,7 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  loginWithSteam: () => Promise<void>;
+  loginWithDiscord: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -19,17 +19,15 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   register: async () => {},
   logout: async () => {},
-  loginWithSteam: async () => {}
+  loginWithDiscord: async () => {}
 });
 
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Convert Supabase user to app User
   const formatUser = async (authUser: AuthUser): Promise<User | null> => {
     try {
-      // Fetch the user profile from our profiles table
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -61,17 +59,13 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     }
   };
 
-  // Check if the user is logged in on page load
   useEffect(() => {
     const initialize = async () => {
       try {
-        // Set initial loading state
         setIsLoading(true);
         
-        // Get current session
         const { data: { session } } = await supabase.auth.getSession();
         
-        // If session exists, get user data
         if (session?.user) {
           const formattedUser = await formatUser(session.user);
           if (formattedUser) {
@@ -79,7 +73,6 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
           }
         }
 
-        // Set up auth state change listener
         const { data: { subscription } } = await supabase.auth.onAuthStateChange(
           async (event, session) => {
             if (session?.user) {
@@ -94,7 +87,6 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
           }
         );
 
-        // Cleanup subscription on unmount
         return () => {
           subscription.unsubscribe();
         };
@@ -137,7 +129,6 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     try {
       setIsLoading(true);
       
-      // Sign up the user with Supabase auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -150,7 +141,6 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       
       if (error) throw error;
       
-      // The profile will be created by the database trigger we set up
       if (data.user) {
         toast({
           title: "Success",
@@ -165,11 +155,11 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     }
   };
 
-  const loginWithSteam = async () => {
+  const loginWithDiscord = async () => {
     try {
       setIsLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'steam',
+        provider: 'discord',
         options: {
           redirectTo: window.location.origin
         }
@@ -177,10 +167,10 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       
       if (error) throw error;
     } catch (error: any) {
-      console.error('Steam login error:', error);
+      console.error('Discord login error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to login with Steam",
+        description: error.message || "Failed to login with Discord",
         variant: "destructive"
       });
     } finally {
@@ -199,7 +189,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, loginWithSteam }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, loginWithDiscord }}>
       {children}
     </AuthContext.Provider>
   );
