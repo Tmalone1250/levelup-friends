@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,17 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Gaming theme colors
+				game: {
+					primary: '#8A2BE2', // Vibrant purple
+					secondary: '#4D4DFF', // Electric blue
+					accent: '#00FFAA', // Neon green
+					dark: '#121212', // Near black for backgrounds
+					card: '#1E1E1E', // Slightly lighter black for cards
+					success: '#00E676', // Bright green for achievements
+					warning: '#FFAB00', // Amber for pending challenges
+					error: '#FF5252', // Red for errors/failures
 				}
 			},
 			borderRadius: {
@@ -84,11 +96,25 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-glow': {
+					'0%, 100%': { 
+						boxShadow: '0 0 5px rgba(138, 43, 226, 0.4), 0 0 20px rgba(138, 43, 226, 0.2)' 
+					},
+					'50%': { 
+						boxShadow: '0 0 15px rgba(138, 43, 226, 0.6), 0 0 30px rgba(138, 43, 226, 0.4)' 
+					}
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-5px)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-glow': 'pulse-glow 2s infinite ease-in-out',
+				'float': 'float 3s infinite ease-in-out'
 			}
 		}
 	},
