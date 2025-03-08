@@ -1,13 +1,16 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { User as AuthUser } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types';
+import { toast } from '@/components/ui/use-toast';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -15,65 +18,113 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   login: async () => {},
   register: async () => {},
-  logout: () => {}
+  logout: async () => {}
 });
-
-// Mock user data for testing
-const MOCK_USER: User = {
-  id: '1',
-  username: 'GamerPro123',
-  email: 'gamer@example.com',
-  avatar: '/avatars/default.png',
-  level: 5,
-  xp: 2500,
-  coins: 750,
-  bio: 'Passionate gamer who loves FPS and RPG games!',
-  createdAt: new Date().toISOString(),
-  online: true
-};
 
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Convert Supabase user to app User
+  const formatUser = async (authUser: AuthUser): Promise<User | null> => {
+    try {
+      // Fetch the user profile from our profiles table
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+      
+      if (!data) return null;
+
+      return {
+        id: authUser.id,
+        username: data.username,
+        email: authUser.email || '',
+        avatar: data.avatar,
+        level: data.level,
+        xp: data.xp,
+        coins: data.coins,
+        bio: data.bio,
+        createdAt: data.created_at,
+        online: data.online
+      };
+    } catch (error) {
+      console.error('Error formatting user:', error);
+      return null;
+    }
+  };
+
+  // Check if the user is logged in on page load
   useEffect(() => {
-    // In a real app, this would check for stored tokens and validate them
-    // For this MVP, we'll just simulate a loading state
-    const checkAuth = async () => {
+    const initialize = async () => {
       try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Set initial loading state
+        setIsLoading(true);
         
-        // Check if there's a stored user in localStorage
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+        // Get current session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        // If session exists, get user data
+        if (session?.user) {
+          const formattedUser = await formatUser(session.user);
+          if (formattedUser) {
+            setUser(formattedUser);
+          }
         }
+
+        // Set up auth state change listener
+        const { data: { subscription } } = await supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (session?.user) {
+              const formattedUser = await formatUser(session.user);
+              if (formattedUser) {
+                setUser(formattedUser);
+              }
+            } else {
+              setUser(null);
+            }
+            setIsLoading(false);
+          }
+        );
+
+        // Cleanup subscription on unmount
+        return () => {
+          subscription.unsubscribe();
+        };
       } catch (error) {
-        console.error('Authentication error:', error);
+        console.error('Auth initialization error:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuth();
+    initialize();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // In a real app, this would make an actual API call
-      // For the MVP, we'll use mock data
-      if (email === 'demo@example.com' && password === 'password') {
-        setUser(MOCK_USER);
-        localStorage.setItem('user', JSON.stringify(MOCK_USER));
-      } else {
-        throw new Error('Invalid credentials');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        const formattedUser = await formatUser(data.user);
+        if (formattedUser) {
+          setUser(formattedUser);
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
       throw error;
     } finally {
@@ -84,24 +135,28 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   const register = async (username: string, email: string, password: string) => {
     try {
       setIsLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // In a real app, this would make an actual API call
-      // For the MVP, we'll create a new user with the provided details
-      const newUser: User = {
-        ...MOCK_USER,
-        id: Math.random().toString(36).substring(2, 9),
-        username,
+      // Sign up the user with Supabase auth
+      const { data, error } = await supabase.auth.signUp({
         email,
-        level: 1,
-        xp: 0,
-        coins: 100
-      };
+        password,
+        options: {
+          data: {
+            username,
+          }
+        }
+      });
       
-      setUser(newUser);
-      localStorage.setItem('user', JSON.stringify(newUser));
-    } catch (error) {
+      if (error) throw error;
+      
+      // The profile will be created by the database trigger we set up
+      if (data.user) {
+        toast({
+          title: "Success",
+          description: "Your account has been created successfully. Check your email for verification.",
+        });
+      }
+    } catch (error: any) {
       console.error('Registration error:', error);
       throw error;
     } finally {
@@ -109,9 +164,14 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (

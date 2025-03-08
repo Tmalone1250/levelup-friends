@@ -39,13 +39,13 @@ const Register = () => {
       await register(username, email, password);
       toast({
         title: "Success",
-        description: "Your account has been created",
+        description: "Your account has been created. You can now log in.",
       });
-      navigate('/');
-    } catch (error) {
+      navigate('/login');
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to create account",
+        description: error.message || "Failed to create account",
         variant: "destructive"
       });
     } finally {

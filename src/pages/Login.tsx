@@ -25,28 +25,16 @@ const Login = () => {
     
     try {
       setIsLoading(true);
-      
-      // For demo purposes, allow login with any credentials or specific demo account
-      if (email === 'demo@example.com' && password === 'password') {
-        await login(email, password);
-        toast({
-          title: "Success",
-          description: "You have successfully logged in",
-        });
-        navigate('/');
-      } else {
-        // For demo, we'll let anyone log in
-        await login('demo@example.com', 'password');
-        toast({
-          title: "Demo Mode",
-          description: "Logged in with demo account",
-        });
-        navigate('/');
-      }
-    } catch (error) {
+      await login(email, password);
+      toast({
+        title: "Success",
+        description: "You have successfully logged in",
+      });
+      navigate('/');
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Invalid credentials",
+        description: error.message || "Login failed. Please check your credentials.",
         variant: "destructive"
       });
     } finally {
@@ -110,23 +98,6 @@ const Login = () => {
                 Sign up
               </Link>
             </p>
-          </div>
-          
-          <div className="mt-6 pt-6 border-t border-border">
-            <p className="text-xs text-center text-muted-foreground mb-4">
-              For demo purposes, you can use: <br />
-              Email: demo@example.com <br />
-              Password: password
-            </p>
-            <button
-              onClick={() => {
-                setEmail('demo@example.com');
-                setPassword('password');
-              }}
-              className="w-full py-2 bg-muted text-muted-foreground border border-border rounded-md hover:bg-muted/70 text-sm"
-            >
-              Use Demo Account
-            </button>
           </div>
         </div>
         
