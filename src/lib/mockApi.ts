@@ -59,7 +59,7 @@ const mockUsers: User[] = [
     level: 7,
     xp: 3600,
     coins: 920,
-    bio: 'Chess, MOBA, RTS - if it requires strategy, I'm in!',
+    bio: 'Chess, MOBA, RTS - if it requires strategy, I\'m in!',
     createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     online: true
   }
